@@ -1,0 +1,19 @@
+#+title:SSD/HDD増設
+
+* 認識確認
+sudo fdisk -l で増設した記憶媒体が認識されていることを確認する。
+
+* パーティション作成
+sudo fdisk /dev/XXX でパーティションを作成する。
+
+* フォーマット
+ext4で使用するとして、 sudo mkfs.ext4 /dev/XXX でフォーマットする。
+
+* マウント/アンマウント
+sudo mount /dev/XXX /path/to/mountpoint でマウントする。
+sudo umount /path/to/mountpoint でアンマウントする。
+
+** 起動時にマウントさせる
+/etc/fstabファイルに記載する。
+例
+UUID=XXXX /path/to/mountpoint ext4 defaults 0 0

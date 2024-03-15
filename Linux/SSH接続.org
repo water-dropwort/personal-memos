@@ -1,0 +1,20 @@
+#+title:SSH接続
+
+* sshd(サーバ)の起動/終了
+** Devuan
+sudo service ssh start
+sudo service ssh stop
+
+** Alma Linux
+sudo systemctl start sshd
+sudo systemctl stop sshd
+
+* 接続
+ssh 接続先user@host コマンドを実行する。
+鍵認証を使用していない場合はパスワードで入る。
+
+** 鍵認証用の準備
+- ssh-keygen -t ed25519 で鍵を生成する。
+- ssh-copy-id -i [ssh-keygenで作成した公開鍵] 接続先user@host でサーバーマシンに公開鍵をコピーする。
+  接続先の~/.ssh/authorized_keysに「ssh-ed25510 XXXXX 接続元user@host」が追記される。
+- ssh-add [ssh-keygenで作成した秘密鍵] で秘密鍵をssh-agentに追加する。
