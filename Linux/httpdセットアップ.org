@@ -1,0 +1,83 @@
+#+title:httpdセットアップ
+
+AlmaLinux on VirtualBoxにhttpdをインストールし、ホストOSからアクセスする構成でのセットアップ。
+
+* 起動時にhttpdを自動で起動する
+sudo systemctl enable httpd を実行すると.serviceファイルが/usr/lib/systemd/systemに生成される。
+
+* Test Pageへのアクセス
+httpd.confの編集は不要。
+firewall-cmdで80番ポートへのアクセスを許可するようにする。
+#+begin_src sh
+  # --permanentは設定の永続化。
+  sudo firewall-cmd --permanent --add-port=80/tcp
+  sudo firewall-cmd --reload
+#+end_src
+
+上記の設定後、ホスト側から192.168.XXX.XXX:80にアクセスすると、
+Alma Linux Test Pageとヘッダに記載されたテストページが開かれる。
+このページのhtmlファイルは、/usr/share/httpd/noindex/index.html であり、
+#+begin_src conf
+  <LocationMatch "^/+$">
+      Options -Indexes    
+      ErrorDocument 403 /.noindex.html
+  </LocationMatch>
+#+end_src
+のところ、192.168.xxx.xxx/にアクセスしたときに403と.noindex.htmlを返すように設定している。
+更に同ファイル上でAliasの設定で.noindex.htmlが先の/noindex/index.htmlのエイリアスとして設定されている。
+
+* 作成したhtmlファイルにアクセスさせる
+httpd.confのDocumentRootに設定されているディレクトリにindex.htmlを保存すれば
+そのindex.htmlが表示されるようになる。
+デフォルトのディレクトリは/var/www/htmlになっている。
+DocumentRootと<Directory>ディレクティブのパスを変更して他のフォルダのhtmlファイルにアクセスさせる場合、
+SELinuxが有効になっているシステムでは該当フォルダおよびファイルに対して、
+sudo chcon -t httpd_sys_content_t /path/to/directory-or-file でコンテキストを設定する必要がある。
+この設定をしていないと、AH00035のエラーがログに記録される。
+
+* CGIスクリプト
+CGIファイルのデフォルトの配置場所は/var/www/cgi-bin。
+html同様ディレクトリは変更可能。
+例えば以下のようなPythonスクリプトを作成し、実行権限をつけてCGIファイル配置ディレクトリに置いておく。
+#+begin_src python
+  #!/usr/bin/python3
+  # -*- encoding: UTF-8 -*-
+  print("Content-Type: text/html")
+  print()
+  print("<html><head><title>CGI test</title></head>")
+  print("<body>This page created CGI script that is written by <strong>Python</strong>.</body></html>")
+#+end_src
+SELinuxを使用している場合は、chconでhttpd_sys_script_exec_tをつけておく。
+
+httpd.confで下記のようにAliasが設定されているので、
+#+begin_src conf
+  ScriptAlias /cgi-bin/ "/var/www/cgi-bin/"
+#+end_src
+CGIスクリプトにアクセスするときは、http://hostname/cgi-bin/XXX.yyy でアクセスできる。
+
+* HTTPS接続
+** 秘密鍵と証明書の作成
+自己署名証明書を使用する。
+1) RSA秘密鍵(key.pem)作成
+   openssl genrsa -out key.pem 2048
+   * /etc/pki/tls/privateに保存する。
+2) 証明書署名請求(csr.pem)作成
+   openssl req -new -key key.pem -out csr.pem
+3) 自己署名証明書(cert.pem)の作成
+   openssl x509 -req -days 365 -in csr.pem -signkey key.pem -out cert.pem
+   ※csr.pemを使用してcert.pemを作成。署名にはkey.pemを使用する。
+   * /etc/pki/tls/certsに保存する。
+** Apache側準備
+1) mod_sslインストール
+   sudo dnf install mod_ssl
+2) ssl.conf設定(1のあと/etc/httpd/conf.dに自動で作成される)
+   該当パラメータを下記のように変更
+   #+begin_src conf
+     ServerName csr.pem作成時のfqdn:443
+     SSLCertificateFile /etc/pki/tls/certs/cert.pem
+     SSLCertificateKeyFile /etc/pki/tls/private/key.pem
+   #+end_src
+** ポートを開く
+firewall-cmdのadd-portに443/tcpを指定して443ポートを開く。
+
+   

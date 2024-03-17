@@ -1,0 +1,6 @@
+#+title:httpd.conf
+
+* Options
+- Indexes:index.htmlファイルが存在しないとき、そのディレクトリのファイルの一覧を返す。
+  設定していないときは403エラーが返される。
+
