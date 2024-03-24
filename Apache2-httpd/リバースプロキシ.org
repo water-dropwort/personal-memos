@@ -1,0 +1,21 @@
+シンプルな設定は以下。(https://httpd.apache.org/docs/2.4/ja/mod/mod_proxy.html)
+#+begin
+# フォワードプロキシを無効にする(ONなら有効)
+ProxyRequests Off
+
+# すべてのホストからの通信を許可
+<Proxy *>
+Order deny,allow
+Allow from all
+</Proxy>
+
+# foo.example.com/barへのプロキシリクエストに対応させる
+ProxyPass /foo http://foo.example.com/bar
+# foo.exampleがリダイレクト応答を返すとき、パスを外向けのものに変える。
+ProxyPassReverse /foo http://foo.example.com/bar 
+#+end
+
+SELinuxを使用している場合は、`sudo setsebool httpd_can_network_connect=true`で
+有効化しておく必要がある。
+でないとPermission Denied(AH00957)のエラーがログに記録され、
+ブラウザには503 Service Unavailableのエラーが返される。

@@ -1,0 +1,6 @@
+Alma Linux上での作業
+* pipxのインストール(from pip)
+dnfからインストールできないので、pip install pipxでインストールする。
+* uwsgiのインストール(from pipx)
+pipx install uwsgiでインストールするが、
+gccがないとbuildのところで失敗するので、先にdnf install gccで入れておく。
