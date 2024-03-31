@@ -1,0 +1,19 @@
+* 公開鍵
+apt-keyは非推奨となったので、gpgコマンドで以下のようにして登録を行う。
+#+begin_src sh
+  wget -O- https://XXX/YYY.asc |\
+  sudo gpg --yes --output /etc/apt/trusted.gpg.d/ZZZ.gpg --dearmor
+#+end_src
+apt updateで処理を行うとき/etc/apt/trusted.gpg.dの下にあるものを見に行くようなので、
+/usr/share/keyringsとかに置いてあると「公開鍵を利用できないため、以下の署名は検証できませんでした」
+のようなエラーが出る。
+なので、/etc/apt/trusted.gpg.dの下にgpgを置くか、xxx.listファイルで
+「deb [signedby=/path/to/gpgfile] https:....」 のような記載でgpgファイルを指定する。
+
+* アーキテクチャの指定
+xxx.listファイルで「deb [arch=amd64] https:...」 のようにアーキテクチャを指定できる。
+※postgresqlのリポジトリのところで
+「N: リポジトリ 'https://apt.postgresql.org/pub/repos/apt
+bookworm-pgdg InRelease' がアーキテクチャ 'i386' をサポートしないため設定ファイル
+'main/binary-i386/Packages' の取得をスキップ」
+のワーニングが発生したので、その対策として入れた。
