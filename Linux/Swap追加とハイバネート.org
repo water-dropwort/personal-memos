@@ -1,0 +1,17 @@
+#+title:Swap追加とハイバネート
+
+Devuan環境で確認
+
+* swapパーティション追加
+1) fdiskでType=Linux swapのパーティションを作成する。
+2) sudo mkswap /dev/XXX でスワップ領域をセットアップする。
+3) sudo swapon /dev/XXX でスワップ領域を有効化する。
+   * sudo swapon --show で有効化されていることを確認する。
+4) /etc/fstabを設定する。
+
+* hibernate
+pm-hibernateを実行すると、すぐに復帰してしまっていた。
+/var/log/pm-suspend.logに「/usr/sbin/pm-hibernate: 343: echo: echo: I/O error」。
+スワップ領域のサイズをRAM×1.5にして、/etc/default.grubファイルの「GRUB_CMDLINE_LINUX=""」を
+「GRUB_CMDLINE_LINUX="resume=/path/to/swappartition"」に変更して、
+再起動したらhibernateうまく行くようになった。
