@@ -1,0 +1,16 @@
+* インストール
+psycopg3を使用する。モジュール名含めpsycopg (ナンバリングなし) なので注意。
+pip install psycopg[binary] でインストール。
+
+** 3があることを知らなくてpsycopg2をインストールしようとしたときのメモ
+1) sudo apt install libpq-devでパッケージをインストール。
+2) pip install psycopg2 --use-pep517でパッケージをインストール。
+   * libpg-devがないと、libpg-fe.hがないみたいなエラーでビルドに失敗する。
+   * 以下のWARNINGが出るので、--use-pep517をつける
+     #+begin
+     DEPRECATION: psycopg2 is being installed using the legacy 'setup.py install' method,
+     because it does not have a 'pyproject.toml' and the 'wheel' package is not installed.
+     pip 23.1 will enforce this behaviour change. A possible replacement is
+     to enable the '--use-pep517' option. Discussion can be found at
+     https://github.com/pypa/pip/issues/8559
+     #+end
