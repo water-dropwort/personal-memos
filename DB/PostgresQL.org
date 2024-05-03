@@ -1,0 +1,48 @@
+#+title:PostgresQL
+
+* 起動
+sudo service postgres startでサーバーを起動。
+/etc/postgresql/の下にバージョンごとにディレクトリが切られており、
+複数存在(たとえば15と16)する場合は起動コマンドですべて起動される。
+
+* psqlで接続
+デフォルトではPeer認証による接続で、ユーザーはpostgresだけなので、
+su postgresでユーザーを変更してからpsqlを実行する。
+
+以下の手順で、新しいユーザーで接続できるようにする。
+
+- ユーザーの作成
+  - create user [username];でユーザーを追加する
+  - select * from pg_user;で追加されていることを確認する。
+    以下のフラグはすべてfに設定されている。
+    1) usecreatedb : DBの作成権限
+    2) usesuper : スーパーユーザー
+    3) userepl : 
+    4) usebypassrls :
+  - alter role [username] with createdb;でDB作成権限をつける。
+  - alter user [username] with password 'new password';でパスワードを設定する。
+- データベースを作成する
+  create database [dbname] with owner = [username];で新しく作成したユーザを所有者とするDBを作成する。
+  または、createdb [dbname]で作成することもできる。
+- psqlで接続
+  [username]の状態で、psql -d [dbname]で接続を行う。
+
+* 設定ファイル
+** 使用されている設定ファイル(postgresql.conf)の確認
+pg_read_all_settingsロールの権限を持つロール(postgresなど)でSHOW config_file;クエリを実行する。
+
+* ホストOSからゲストOS(Alma Linux)のpostgresに接続するときの記録
+psql -d [dbname] -U [username] -h [ipaddress] -p 5432でホストから接続を試みる。
+エラー：ホストへの経路がありません
+- Alma Linux側のファイアウォールで5432/tcpが許可されていなかった。
+- sudo firewall-cmd --add-port=5432/tcpでポート追加。
+再実行。→ エラー：接続を拒否されました。
+- ホストからnmap。→ STATEがclosedになっていた。
+- postgresql.confで、listen_addressをゲストのipアドレスに変更し、再起動。
+再実行。→ エラー：FATAL:  no pg_hba.conf entry for host "host os ip", user "username", database "dbname", no encryption
+- pg_hba.confに設定を追加する
+  1) SHOW password_encryptionでパスワードの暗号化方法を確認 (scram-sha-256)
+  2) pg_hba.confに追記
+  3) postgresql.confのhba_fileディレクティブでpg_hba.confファイルのパスを指定する
+  4) systemctl restart postgresql-16でリスタート。
+再実行。→成功
