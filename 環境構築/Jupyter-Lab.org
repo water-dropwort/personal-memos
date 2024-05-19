@@ -1,0 +1,15 @@
+#+title:Jupyter Lab環境構築
+
+* pipxでインストール
+pipx install jupyterlab
+
+(注)インストールしたバイナリのいくつかのリンクが~/.local/binに貼られるが、jupyterコマンドのリンクが貼られない。
+R Kernelのインストール時に躓くので、lnコマンド等で.local/binにリンクを作成するか、
+jupyterlabのbinディレクトリをPATHに追加する。
+
+* R
+- Rで以下を実行する。
+  #+begin_src R
+    install.packages('IRkernel')
+    IRkernel::installspec()
+  #+end_src
